@@ -1,7 +1,8 @@
 import { requireAuth } from './_lib/auth.js';
 import { getUser, saveUser } from './_lib/users.js';
+import { withErrorHandling } from './_lib/handler.js';
 
-export default async function handler(req, res) {
+export default withErrorHandling(async function handler(req, res) {
   const userId = requireAuth(req);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
@@ -24,4 +25,4 @@ export default async function handler(req, res) {
   }
 
   res.status(405).json({ error: 'method_not_allowed' });
-}
+});

@@ -1,11 +1,12 @@
 import { requireAuth } from './_lib/auth.js';
 import { getUserRecords } from './_lib/checkins.js';
 import { deriveCheckinContext, competitionEnded } from './_lib/time.js';
+import { withErrorHandling } from './_lib/handler.js';
 import { currentStreak, longestStreak, totalClean, rankUsers } from '../shared/streaks.js';
 import { USER_IDS, USER_LABELS, MILESTONES } from '../shared/constants.js';
 
 /** One endpoint for Today/Calendar/Leaderboard/Badges/Results — cheap at this scale, one round trip. */
-export default async function handler(req, res) {
+export default withErrorHandling(async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
 
   const userId = requireAuth(req);
@@ -38,4 +39,4 @@ export default async function handler(req, res) {
     leaderboardOrder: rankUsers(users).map((u) => u.id),
     me: userId,
   });
-}
+});

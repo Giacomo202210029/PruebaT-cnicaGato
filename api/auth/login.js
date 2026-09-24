@@ -1,8 +1,9 @@
 import { getUser, verifyPin, setPin, isValidUserId } from '../_lib/users.js';
 import { issueToken } from '../_lib/auth.js';
+import { withErrorHandling } from '../_lib/handler.js';
 import { USER_LABELS } from '../../shared/constants.js';
 
-export default async function handler(req, res) {
+export default withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   const { userId, pin } = req.body ?? {};
@@ -21,4 +22,4 @@ export default async function handler(req, res) {
 
   const token = issueToken(userId);
   res.status(200).json({ token, userId, label: USER_LABELS[userId] });
-}
+});
