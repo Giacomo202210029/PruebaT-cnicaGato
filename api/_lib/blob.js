@@ -1,4 +1,4 @@
-import { put, head, list } from '@vercel/blob';
+import { put, head, list, BlobNotFoundError } from '@vercel/blob';
 
 // Vercel's Storage tab connects a Blob store under a prefixed name
 // (BLOB_READ_WRITE_TOKEN_READ_WRITE_TOKEN) rather than the plain
@@ -52,5 +52,6 @@ export async function listJson(prefix) {
 }
 
 function isNotFound(err) {
-  return err?.name === 'BlobNotFoundError' || err?.status === 404 || err?.statusCode === 404;
+  // @vercel/blob's error classes don't set `err.name`, so `instanceof` is the reliable check.
+  return err instanceof BlobNotFoundError || err?.status === 404 || err?.statusCode === 404;
 }
