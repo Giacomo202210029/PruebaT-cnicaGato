@@ -1,12 +1,12 @@
-import { put, head, list, BlobNotFoundError } from '@vercel/blob';
+import { put, head, list, get, BlobNotFoundError } from '@vercel/blob';
 
-// Vercel's Storage tab connects a Blob store under a prefixed name
-// (BLOB_READ_WRITE_TOKEN_READ_WRITE_TOKEN) rather than the plain
-// BLOB_READ_WRITE_TOKEN the SDK defaults to — pass it explicitly, with the
-// plain name as a fallback for setups where it *is* the default var.
+// The store the user connected via the dashboard's Storage tab defaults to private
+// access, and Vercel names its token BLOB_READ_WRITE_TOKEN_READ_WRITE_TOKEN rather
+// than the plain BLOB_READ_WRITE_TOKEN the SDK falls back to — pass both explicitly.
+const ACCESS = 'private';
 const TOKEN = process.env.BLOB_READ_WRITE_TOKEN_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN;
 
-const BASE_OPTS = { access: 'public', contentType: 'application/json', addRandomSuffix: false, token: TOKEN };
+const BASE_OPTS = { access: ACCESS, contentType: 'application/json', addRandomSuffix: false, token: TOKEN };
 
 /**
  * allowOverwrite defaults to false: this makes the storage layer itself reject a second
@@ -29,25 +29,15 @@ export async function existsKey(key) {
 }
 
 export async function getJson(key) {
-  try {
-    const meta = await head(key, { token: TOKEN });
-    const res = await fetch(meta.url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (err) {
-    if (isNotFound(err)) return null;
-    throw err;
-  }
+  const result = await get(key, { access: ACCESS, token: TOKEN });
+  if (!result?.stream) return null;
+  const text = await new Response(result.stream).text();
+  return JSON.parse(text);
 }
 
 export async function listJson(prefix) {
   const { blobs } = await list({ prefix, token: TOKEN });
-  const results = await Promise.all(
-    blobs.map(async (b) => {
-      const res = await fetch(b.url);
-      return res.ok ? res.json() : null;
-    }),
-  );
+  const results = await Promise.all(blobs.map((b) => getJson(b.pathname)));
   return results.filter(Boolean);
 }
 
