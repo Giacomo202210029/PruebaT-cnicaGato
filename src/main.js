@@ -1,17 +1,13 @@
-import router from './router';
-import 'primeicons/primeicons.css';
-import PrimeVue from 'primevue/config';
-import './style.css'
-import {createApp} from "vue";
-import App from "./App.vue";
+import { createApp } from 'vue';
+import App from './App.vue';
+import './style.css';
 
-import Carousel from 'primevue/carousel';
+createApp(App).mount('#app');
 
-
-const app = createApp(App);
-app.use(router);
-app.use(PrimeVue);
-app.component('Carousel', Carousel);
-
-
-app.mount('#app');
+if ('serviceWorker' in navigator) {
+  import('virtual:pwa-register')
+    .then(({ registerSW }) => registerSW({ immediate: true }))
+    .catch(() => {
+      // PWA plugin not active in this environment (e.g. certain test runs) — fine, app still works.
+    });
+}
