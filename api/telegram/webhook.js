@@ -1,16 +1,13 @@
 import { recordCheckin, CheckinError } from '../_lib/checkins.js';
 import { getUser, saveUser, findUserByTelegramChatId } from '../_lib/users.js';
+import { getContent, pickRandom } from '../_lib/content.js';
 import {
   sendMessage,
   answerCallbackQuery,
   editMessageReplyMarkup,
   buildNameKeyboard,
 } from '../_lib/telegram.js';
-import { STATUS, CLEAN_PHRASES, RELAPSE_PHRASES, USER_LABELS } from '../../shared/constants.js';
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+import { STATUS, USER_LABELS } from '../../shared/constants.js';
 
 export default async function handler(req, res) {
   // Ack immediately — Telegram retries aggressively on slow/non-200 responses.
@@ -61,9 +58,10 @@ async function handleCallback(cq) {
 
     try {
       await recordCheckin({ userId: user.id, status, source: 'telegram' });
+      const content = await getContent();
       await answerCallbackQuery(cq.id, 'Marcado ✅');
       if (messageId) await editMessageReplyMarkup(chatId, messageId);
-      await sendMessage(chatId, status === STATUS.CLEAN ? pick(CLEAN_PHRASES) : pick(RELAPSE_PHRASES));
+      await sendMessage(chatId, pickRandom(status === STATUS.CLEAN ? content.cleanPhrases : content.relapsePhrases));
     } catch (err) {
       const message = err instanceof CheckinError ? err.message : 'Algo salió mal, intenta desde la web.';
       await answerCallbackQuery(cq.id, message);

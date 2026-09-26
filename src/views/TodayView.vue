@@ -102,6 +102,11 @@ async function markRelapse() {
     </template>
 
     <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+
+    <div v-if="boardState.data.scienceFact" class="science-card">
+      <p class="science-card-label">🧪 Dato del día</p>
+      <p class="science-card-text">{{ boardState.data.scienceFact }}</p>
+    </div>
   </div>
   <div v-else class="screen loading-screen">Cargando…</div>
 </template>

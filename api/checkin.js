@@ -1,10 +1,7 @@
 import { requireAuth } from './_lib/auth.js';
 import { recordCheckin, CheckinError } from './_lib/checkins.js';
-import { STATUS, CLEAN_PHRASES, RELAPSE_PHRASES } from '../shared/constants.js';
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+import { getContent, pickRandom } from './_lib/content.js';
+import { STATUS } from '../shared/constants.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -16,7 +13,8 @@ export default async function handler(req, res) {
 
   try {
     const record = await recordCheckin({ userId, status, note, trigger, source: 'web' });
-    const phrase = record.status === STATUS.CLEAN ? pick(CLEAN_PHRASES) : pick(RELAPSE_PHRASES);
+    const content = await getContent();
+    const phrase = pickRandom(record.status === STATUS.CLEAN ? content.cleanPhrases : content.relapsePhrases);
     res.status(201).json({ record, phrase });
   } catch (err) {
     if (err instanceof CheckinError) {

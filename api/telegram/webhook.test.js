@@ -21,6 +21,11 @@ vi.mock('../_lib/checkins.js', () => ({
   CheckinError: MockCheckinError,
 }));
 
+vi.mock('../_lib/content.js', () => ({
+  getContent: async () => ({ cleanPhrases: ['Bien hecho.'], relapsePhrases: ['Sigue mañana.'] }),
+  pickRandom: (list) => list[0],
+}));
+
 const usersById = new Map();
 vi.mock('../_lib/users.js', () => ({
   getUser: async (id) => usersById.get(id) ?? null,

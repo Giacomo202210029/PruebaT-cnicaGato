@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useAuth } from './composables/useAuth.js';
 import { useBoard } from './composables/useBoard.js';
 import LoginView from './views/LoginView.vue';
@@ -8,10 +8,11 @@ import CalendarView from './views/CalendarView.vue';
 import LeaderboardView from './views/LeaderboardView.vue';
 import ResultsView from './views/ResultsView.vue';
 import SettingsView from './views/SettingsView.vue';
+import AdminView from './views/AdminView.vue';
 import InstallPrompt from './components/InstallPrompt.vue';
 
 const { state: authState } = useAuth();
-const { startPolling, stopPolling } = useBoard();
+const { state: boardState, startPolling, stopPolling } = useBoard();
 
 const tab = ref('today');
 
@@ -21,13 +22,18 @@ watch(
   { immediate: true },
 );
 
-const tabs = [
-  { id: 'today', label: 'Hoy', icon: '🔥' },
-  { id: 'calendar', label: 'Calendario', icon: '📅' },
-  { id: 'leaderboard', label: 'Tabla', icon: '🏆' },
-  { id: 'results', label: 'Resultados', icon: '🎉' },
-  { id: 'settings', label: 'Ajustes', icon: '⚙️' },
-];
+const isAdmin = computed(() => boardState.data?.isAdmin ?? false);
+
+const tabs = computed(() => {
+  const base = [
+    { id: 'today', label: 'Hoy', icon: '🔥' },
+    { id: 'calendar', label: 'Calendario', icon: '📅' },
+    { id: 'leaderboard', label: 'Tabla', icon: '🏆' },
+    { id: 'results', label: 'Resultados', icon: '🎉' },
+    { id: 'settings', label: 'Ajustes', icon: '⚙️' },
+  ];
+  return isAdmin.value ? [...base, { id: 'admin', label: 'Admin', icon: '🛠️' }] : base;
+});
 </script>
 
 <template>
@@ -40,6 +46,7 @@ const tabs = [
       <LeaderboardView v-else-if="tab === 'leaderboard'" />
       <ResultsView v-else-if="tab === 'results'" />
       <SettingsView v-else-if="tab === 'settings'" />
+      <AdminView v-else-if="tab === 'admin' && isAdmin" />
     </main>
     <nav class="bottom-nav">
       <button

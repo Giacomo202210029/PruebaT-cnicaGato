@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { SESSION_DURATION_DAYS } from '../../shared/constants.js';
+import { SESSION_DURATION_DAYS, ADMIN_USER_ID } from '../../shared/constants.js';
 
 function secret() {
   const s = process.env.AUTH_SECRET;
@@ -38,4 +38,10 @@ export function requireAuth(req) {
   const header = req.headers.authorization || req.headers.Authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   return verifyToken(token);
+}
+
+/** Returns the authenticated userId only if it's the admin (Jugador 1); null otherwise. */
+export function requireAdmin(req) {
+  const userId = requireAuth(req);
+  return userId === ADMIN_USER_ID ? userId : null;
 }

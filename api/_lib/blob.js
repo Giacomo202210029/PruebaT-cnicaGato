@@ -1,4 +1,4 @@
-import { put, head, list, get, BlobNotFoundError } from '@vercel/blob';
+import { put, head, list, get, del, BlobNotFoundError } from '@vercel/blob';
 
 // The store the user connected via the dashboard's Storage tab defaults to private
 // access, and Vercel names its token BLOB_READ_WRITE_TOKEN_READ_WRITE_TOKEN rather
@@ -39,6 +39,14 @@ export async function listJson(prefix) {
   const { blobs } = await list({ prefix, token: TOKEN });
   const results = await Promise.all(blobs.map((b) => getJson(b.pathname)));
   return results.filter(Boolean);
+}
+
+/** Admin-only reset tool: wipes every blob under a prefix. Returns how many were deleted. */
+export async function deleteAll(prefix) {
+  const { blobs } = await list({ prefix, token: TOKEN });
+  if (blobs.length === 0) return 0;
+  await del(blobs.map((b) => b.pathname), { token: TOKEN });
+  return blobs.length;
 }
 
 function isNotFound(err) {

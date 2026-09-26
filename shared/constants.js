@@ -10,6 +10,7 @@ export const WINDOW_END_HOUR = 4;
 export const URGENT_REMINDER_HOUR = 2;
 
 export const USER_IDS = ['jugador1', 'jugador2', 'jugador3'];
+export const ADMIN_USER_ID = 'jugador1';
 export const USER_LABELS = {
   jugador1: 'Jugador 1',
   jugador2: 'Jugador 2',
