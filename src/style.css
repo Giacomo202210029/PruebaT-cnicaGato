@@ -10,12 +10,16 @@
 
   --accent: #d9822b;
   --accent-bg: rgba(217, 130, 43, 0.14);
-  --clean: #4d9f6e;
-  --clean-bg: rgba(77, 159, 110, 0.14);
-  --relapse: #e2565c;
-  --relapse-bg: rgba(226, 86, 92, 0.14);
-  --no-report: #4a4a4a;
-  --today: #5b93d1;
+  --clean: #4fb286;
+  --clean-bg: rgba(79, 178, 134, 0.16);
+  --clean-ink: #06210f;
+  --relapse: #ec6a70;
+  --relapse-bg: rgba(236, 106, 112, 0.16);
+  --relapse-ink: #2c0508;
+  --no-report: #3a3d42;
+  --today: #4fb8e6;
+  --today-bg: rgba(79, 184, 230, 0.16);
+  --today-ink: #04202b;
 
   color-scheme: dark;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', ui-sans-serif, system-ui, Helvetica, Arial, sans-serif;
@@ -378,56 +382,92 @@ textarea {
   background: var(--bg-card-hover);
 }
 
+.calendar-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 8px;
+}
+
+.calendar-weekdays span {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 6px;
+}
+
+.calendar-blank {
+  aspect-ratio: 1;
 }
 
 .calendar-cell {
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: 10px;
   border: 1px solid var(--border);
-  background: var(--bg-card);
+  background: var(--bg);
   color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: transform 0.12s ease;
+}
+
+.calendar-cell:not(:disabled):active {
+  transform: scale(0.92);
 }
 
 .calendar-cell:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .state-clean {
-  background: var(--clean-bg);
-  color: var(--clean);
+  background: var(--clean);
+  color: var(--clean-ink);
   border-color: var(--clean);
+  box-shadow: 0 2px 8px -2px rgba(79, 178, 134, 0.5);
 }
 
 .state-relapse {
-  background: var(--relapse-bg);
-  color: var(--relapse);
+  background: var(--relapse);
+  color: var(--relapse-ink);
   border-color: var(--relapse);
+  box-shadow: 0 2px 8px -2px rgba(236, 106, 112, 0.5);
 }
 
 .state-no_reportado {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--no-report);
   color: var(--text-muted);
+  border-color: var(--no-report);
 }
 
 .state-today {
-  border-color: var(--today);
+  background: var(--today-bg);
+  border: 2px solid var(--today);
   color: var(--today);
+  box-shadow: 0 0 0 3px rgba(79, 184, 230, 0.18);
 }
 
 .state-future {
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 .calendar-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
   font-size: 0.78rem;
   color: var(--text-muted);
 }
@@ -443,6 +483,7 @@ textarea {
   height: 8px;
   border-radius: 50%;
   display: inline-block;
+  box-shadow: none;
 }
 
 .day-detail {
