@@ -1,11 +1,28 @@
 import { reactive, readonly } from 'vue';
 import { useAuth } from './useAuth.js';
 
+// This is a once-a-day check-in app, not live chat — poll gently, and only while the tab
+// is actually visible. A background tab left open used to keep polling every 45s forever,
+// which is what burned through the Vercel Blob free-tier request quota well before the
+// competition even started.
+const POLL_INTERVAL_MS = 5 * 60 * 1000;
+
 const state = reactive({ loading: false, error: null, data: null });
 let pollTimer = null;
 
+function startInterval() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(refresh, POLL_INTERVAL_MS);
+}
+
 function onVisibility() {
-  if (document.visibilityState === 'visible') refresh();
+  if (document.visibilityState === 'visible') {
+    refresh();
+    startInterval();
+  } else {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
 }
 
 async function refresh() {
@@ -31,12 +48,12 @@ export function useBoard() {
   function startPolling() {
     stopPolling();
     refresh();
-    pollTimer = setInterval(refresh, 45_000);
+    if (document.visibilityState === 'visible') startInterval();
     document.addEventListener('visibilitychange', onVisibility);
   }
 
   function stopPolling() {
-    if (pollTimer) clearInterval(pollTimer);
+    clearInterval(pollTimer);
     pollTimer = null;
     document.removeEventListener('visibilitychange', onVisibility);
     state.data = null;
