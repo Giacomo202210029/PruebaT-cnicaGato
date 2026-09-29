@@ -5,8 +5,8 @@ import { STATUS, TRIGGER_TAGS, MAX_NOTE_LENGTH, USER_IDS } from '../../shared/co
 
 /**
  * Admin-only preview tool: writes a check-in for any user/date within the competition,
- * bypassing the night-window and "must be today" rules that recordCheckin() enforces for
- * real players — this is explicitly a testing aid, not a way to log a real day. Allows
+ * bypassing the "only today or yesterday" rule that recordCheckin() enforces for real
+ * players — this is explicitly a testing aid, not a way to log a real day. Allows
  * overwrite so the admin can freely iterate while previewing. Use /api/admin/reset to
  * clear everything before the real competition starts.
  */

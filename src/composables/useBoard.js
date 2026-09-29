@@ -59,11 +59,11 @@ export function useBoard() {
     state.data = null;
   }
 
-  async function submitCheckin(status, { note, trigger } = {}) {
+  async function submitCheckin(status, { note, trigger, date } = {}) {
     const res = await fetch('/api/checkin', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ status, note, trigger }),
+      body: JSON.stringify({ status, note, trigger, date }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'No se pudo marcar el día.');

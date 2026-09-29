@@ -1,30 +1,25 @@
-import { sweepUnreported } from '../_lib/checkins.js';
+import { sweepUnreported, resolvePendingDate } from '../_lib/checkins.js';
 import { getAllUsers } from '../_lib/users.js';
 import { existsKey, putJson } from '../_lib/store.js';
 import { sendMessage, buildCheckinKeyboard } from '../_lib/telegram.js';
 import { deriveCheckinContext, getServerNow } from '../_lib/time.js';
-import { WINDOW_START_HOUR, URGENT_REMINDER_HOUR, TIMEZONE } from '../../shared/constants.js';
 
-function zonedHour(now) {
-  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONE, hour12: false, hour: '2-digit' });
-  const h = fmt.format(now);
-  return h === '24' ? 0 : Number(h);
-}
+const reminderMarkerKey = (userId, date) => `meta/reminders/${userId}/${date}.json`;
 
-const reminderMarkerKey = (userId, date, type) => `meta/reminders/${userId}/${date}_${type}.json`;
-
-async function markSent(userId, date, type) {
+async function markSent(userId, date) {
   try {
-    await putJson(reminderMarkerKey(userId, date, type), { sentAt: new Date().toISOString() });
+    await putJson(reminderMarkerKey(userId, date), { sentAt: new Date().toISOString() });
   } catch {
     // Marker already exists — another tick already handled this, fine.
   }
 }
 
 /**
- * Runs every hour (Vercel Cron free tier fires "within the hour", not minute-precise), so
- * every step here is idempotent: the sweep re-checks per-day existence, and reminders are
- * deduped with their own marker file, safe to re-run many times an hour.
+ * Runs twice a day (Vercel Cron's Hobby tier only allows daily schedules, so this is wired
+ * as two separate daily crons rather than one hourly one). There's no hard deadline anymore
+ * — each run just closes the books on days nobody can mark anymore, and sends at most one
+ * gentle nudge per day to anyone with a pending day. Never framed as urgent: a missed day
+ * isn't a "sin", it just doesn't count in your favor.
  */
 export default async function handler(req, res) {
   const auth = req.headers.authorization || '';
@@ -34,31 +29,26 @@ export default async function handler(req, res) {
 
   const now = getServerNow();
   const ctx = deriveCheckinContext(now);
-  const hour = zonedHour(now);
 
   const swept = await sweepUnreported(now);
 
   let remindersSent = 0;
-  const band = hour === WINDOW_START_HOUR ? 'open' : hour === URGENT_REMINDER_HOUR ? 'urgent' : null;
+  const users = await getAllUsers();
+  for (const user of users) {
+    if (!user.telegramChatId || !user.notificationsEnabled) continue;
+    if (await existsKey(reminderMarkerKey(user.id, ctx.calendarDate))) continue;
 
-  if (band) {
-    const users = await getAllUsers();
-    for (const user of users) {
-      if (!user.telegramChatId || !user.notificationsEnabled) continue;
+    const pendingDate = await resolvePendingDate(user.id, now);
+    if (!pendingDate) continue;
 
-      const date = ctx.targetDate;
-      if (await existsKey(`checkins/${user.id}/${date}.json`)) continue;
-      if (await existsKey(reminderMarkerKey(user.id, date, band))) continue;
+    const text =
+      pendingDate === ctx.calendarDate
+        ? '🌙 ¿Cómo te fue hoy? Marca tu día cuando puedas.'
+        : '🌤️ Ayer se te quedó sin marcar — todavía puedes hacerlo.';
 
-      const text =
-        band === 'open'
-          ? '🌙 Hora de marcar tu día. ¿Sin pecado o pecaste?'
-          : `🚨 Racha en peligro — te quedan ~${ctx.minutesUntilClose} min antes de que cierre la ventana. ¡Marca ya!`;
-
-      await sendMessage(user.telegramChatId, text, buildCheckinKeyboard());
-      await markSent(user.id, date, band);
-      remindersSent++;
-    }
+    await sendMessage(user.telegramChatId, text, buildCheckinKeyboard());
+    await markSent(user.id, ctx.calendarDate);
+    remindersSent++;
   }
 
   res.status(200).json({ swept: swept.length, remindersSent });

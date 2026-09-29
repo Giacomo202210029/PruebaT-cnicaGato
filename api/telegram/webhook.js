@@ -1,4 +1,4 @@
-import { recordCheckin, CheckinError } from '../_lib/checkins.js';
+import { recordCheckin, resolvePendingDate, CheckinError } from '../_lib/checkins.js';
 import { getUser, saveUser, findUserByTelegramChatId } from '../_lib/users.js';
 import { getContent, pickRandom } from '../_lib/content.js';
 import {
@@ -56,8 +56,15 @@ async function handleCallback(cq) {
       return;
     }
 
+    const date = await resolvePendingDate(user.id);
+    if (!date) {
+      await answerCallbackQuery(cq.id, 'Ya tienes todo marcado, no queda ningún día pendiente.');
+      if (messageId) await editMessageReplyMarkup(chatId, messageId);
+      return;
+    }
+
     try {
-      await recordCheckin({ userId: user.id, status, source: 'telegram' });
+      await recordCheckin({ userId: user.id, status, date, source: 'telegram' });
       const content = await getContent();
       await answerCallbackQuery(cq.id, 'Marcado ✅');
       if (messageId) await editMessageReplyMarkup(chatId, messageId);

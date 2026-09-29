@@ -5,6 +5,7 @@ import { COMPETITION_START, COMPETITION_END } from '../../shared/constants.js';
 const props = defineProps({
   days: { type: Array, required: true },
   today: { type: String, required: true },
+  yesterday: { type: String, default: null },
 });
 const emit = defineEmits(['select']);
 
@@ -32,8 +33,9 @@ const cells = computed(() => {
   return allDates().map((date) => {
     const record = byDate.get(date);
     let state = 'future';
-    if (date < props.today) state = record ? record.status : 'no_reportado';
-    else if (date === props.today) state = record ? record.status : 'today';
+    if (record) state = record.status;
+    else if (date === props.today || date === props.yesterday) state = 'today';
+    else if (date < props.today) state = 'no_reportado';
     return { date, day: Number(date.slice(-2)), state, record };
   });
 });

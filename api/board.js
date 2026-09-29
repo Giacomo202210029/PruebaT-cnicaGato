@@ -30,17 +30,23 @@ export default withErrorHandling(async function handler(req, res) {
     }),
   );
 
+  // Relapse notes/triggers are private — only their author ever sees them. Stats above are
+  // computed from the full, unstripped records first.
+  const usersForResponse = users.map((u) => ({
+    ...u,
+    days: u.id === userId ? u.days : u.days.map((d) => ({ ...d, note: null, trigger: null })),
+  }));
+
   res.status(200).json({
     serverNow: ctx.serverNow,
-    targetDate: ctx.targetDate,
-    isWithinWindow: ctx.isWithinWindow,
-    minutesUntilClose: ctx.minutesUntilClose,
+    today: ctx.calendarDate,
+    yesterday: ctx.yesterday,
     competitionEnded: competitionEnded(),
     milestones: MILESTONES,
-    users,
+    users: usersForResponse,
     leaderboardOrder: rankUsers(users).map((u) => u.id),
     me: userId,
     isAdmin: userId === ADMIN_USER_ID,
-    scienceFact: pickForDate(content.scienceFacts, ctx.targetDate),
+    scienceFact: pickForDate(content.scienceFacts, ctx.calendarDate),
   });
 });

@@ -9,6 +9,7 @@ vi.mock('../_lib/telegram.js', () => ({
 }));
 
 const recordCheckinMock = vi.fn();
+const resolvePendingDateMock = vi.fn();
 class MockCheckinError extends Error {
   constructor(status, code, message) {
     super(message);
@@ -18,6 +19,7 @@ class MockCheckinError extends Error {
 }
 vi.mock('../_lib/checkins.js', () => ({
   recordCheckin: (...args) => recordCheckinMock(...args),
+  resolvePendingDate: (...args) => resolvePendingDateMock(...args),
   CheckinError: MockCheckinError,
 }));
 
@@ -51,6 +53,8 @@ function makeRes() {
 beforeEach(() => {
   telegramCalls.length = 0;
   recordCheckinMock.mockReset();
+  resolvePendingDateMock.mockReset();
+  resolvePendingDateMock.mockResolvedValue('2026-10-05');
   usersById.clear();
   process.env.TELEGRAM_WEBHOOK_SECRET = 'test-secret';
 });
@@ -74,7 +78,7 @@ describe('telegram webhook', () => {
     expect(usersById.get('jugador1').telegramChatId).toBe(555);
   });
 
-  it('records a check-in on a chk: callback for a linked user', async () => {
+  it('records a check-in on a chk: callback for a linked user, dated via resolvePendingDate', async () => {
     usersById.set('jugador1', { id: 'jugador1', telegramChatId: 555 });
     recordCheckinMock.mockResolvedValue({ status: 'clean' });
     const req = {
@@ -82,9 +86,23 @@ describe('telegram webhook', () => {
       body: { callback_query: { id: 'cbq2', data: 'chk:clean', message: { chat: { id: 555 }, message_id: 10 } } },
     };
     await handler(req, makeRes());
+    expect(resolvePendingDateMock).toHaveBeenCalledWith('jugador1');
     expect(recordCheckinMock).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'jugador1', status: 'clean', source: 'telegram' }),
+      expect.objectContaining({ userId: 'jugador1', status: 'clean', date: '2026-10-05', source: 'telegram' }),
     );
+  });
+
+  it('tells the user everything is already marked when nothing is pending, without calling recordCheckin', async () => {
+    usersById.set('jugador1', { id: 'jugador1', telegramChatId: 555 });
+    resolvePendingDateMock.mockResolvedValue(null);
+    const req = {
+      headers: { 'x-telegram-bot-api-secret-token': 'test-secret' },
+      body: { callback_query: { id: 'cbq5', data: 'chk:clean', message: { chat: { id: 555 }, message_id: 13 } } },
+    };
+    await handler(req, makeRes());
+    expect(recordCheckinMock).not.toHaveBeenCalled();
+    const ack = telegramCalls.find((c) => c[0] === 'answerCallbackQuery');
+    expect(ack[2]).toMatch(/ya tienes todo marcado/i);
   });
 
   it('tells an unlinked chat to /start first, without calling recordCheckin', async () => {

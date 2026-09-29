@@ -3,12 +3,6 @@ export const COMPETITION_START = '2026-10-01';
 export const COMPETITION_END = '2026-10-31';
 export const TIMEZONE = 'America/Bogota';
 
-// Check-in window: opens 18:00, closes 04:00 the following calendar day.
-export const WINDOW_START_HOUR = 18;
-export const WINDOW_END_HOUR = 4;
-// Local hour for the "racha en peligro" urgent nudge — comfortably before WINDOW_END_HOUR.
-export const URGENT_REMINDER_HOUR = 2;
-
 export const USER_IDS = ['jugador1', 'jugador2', 'jugador3'];
 export const ADMIN_USER_ID = 'jugador1';
 export const USER_LABELS = {

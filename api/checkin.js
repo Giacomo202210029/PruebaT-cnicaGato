@@ -9,10 +9,10 @@ export default async function handler(req, res) {
   const userId = requireAuth(req);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
-  const { status, note, trigger } = req.body ?? {};
+  const { status, date, note, trigger } = req.body ?? {};
 
   try {
-    const record = await recordCheckin({ userId, status, note, trigger, source: 'web' });
+    const record = await recordCheckin({ userId, status, date, note, trigger, source: 'web' });
     const content = await getContent();
     const phrase = pickRandom(record.status === STATUS.CLEAN ? content.cleanPhrases : content.relapsePhrases);
     res.status(201).json({ record, phrase });

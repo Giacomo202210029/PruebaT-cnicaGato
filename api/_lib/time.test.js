@@ -1,54 +1,46 @@
 import { describe, it, expect } from 'vitest';
-import { deriveCheckinContext } from './time.js';
+import { deriveCheckinContext, isEligibleCheckinDate } from './time.js';
 
 // America/Bogota is fixed UTC-5, no DST, so this literal offset is safe for every test date.
 const bogota = (localDateTime) => new Date(`${localDateTime}-05:00`);
 
-describe('deriveCheckinContext window boundaries', () => {
-  it('rejects at 17:59', () => {
-    expect(deriveCheckinContext(bogota('2026-10-05T17:59:00')).isWithinWindow).toBe(false);
+describe('deriveCheckinContext', () => {
+  it('derives today and yesterday from the server clock, any time of day', () => {
+    expect(deriveCheckinContext(bogota('2026-10-05T09:15:00')).calendarDate).toBe('2026-10-05');
+    expect(deriveCheckinContext(bogota('2026-10-05T09:15:00')).yesterday).toBe('2026-10-04');
+    expect(deriveCheckinContext(bogota('2026-10-05T23:59:00')).calendarDate).toBe('2026-10-05');
+    expect(deriveCheckinContext(bogota('2026-10-06T00:00:00')).calendarDate).toBe('2026-10-06');
   });
 
-  it('accepts at 18:00 and targets tonight', () => {
-    const ctx = deriveCheckinContext(bogota('2026-10-05T18:00:00'));
-    expect(ctx.isWithinWindow).toBe(true);
-    expect(ctx.targetDate).toBe('2026-10-05');
-  });
-
-  it('accepts at 23:59 and targets tonight', () => {
-    const ctx = deriveCheckinContext(bogota('2026-10-05T23:59:00'));
-    expect(ctx.isWithinWindow).toBe(true);
-    expect(ctx.targetDate).toBe('2026-10-05');
-  });
-
-  it('accepts at 00:00 and targets last night', () => {
-    const ctx = deriveCheckinContext(bogota('2026-10-06T00:00:00'));
-    expect(ctx.isWithinWindow).toBe(true);
-    expect(ctx.targetDate).toBe('2026-10-05');
-  });
-
-  it('accepts at 03:59 and targets last night', () => {
-    const ctx = deriveCheckinContext(bogota('2026-10-06T03:59:00'));
-    expect(ctx.isWithinWindow).toBe(true);
-    expect(ctx.targetDate).toBe('2026-10-05');
-  });
-
-  it('rejects at 04:00', () => {
-    expect(deriveCheckinContext(bogota('2026-10-06T04:00:00')).isWithinWindow).toBe(false);
-  });
-
-  it('rejects at noon', () => {
-    expect(deriveCheckinContext(bogota('2026-10-06T12:00:00')).isWithinWindow).toBe(false);
-  });
-
-  it('flags outside the competition range even during a valid window', () => {
+  it('flags outside the competition range', () => {
     expect(deriveCheckinContext(bogota('2026-11-01T20:00:00')).withinCompetition).toBe(false);
     expect(deriveCheckinContext(bogota('2026-09-30T20:00:00')).withinCompetition).toBe(false);
     expect(deriveCheckinContext(bogota('2026-10-01T20:00:00')).withinCompetition).toBe(true);
   });
+});
 
-  it('minutesUntilClose counts down correctly across midnight', () => {
-    expect(deriveCheckinContext(bogota('2026-10-05T23:00:00')).minutesUntilClose).toBe(300);
-    expect(deriveCheckinContext(bogota('2026-10-06T02:30:00')).minutesUntilClose).toBe(90);
+describe('isEligibleCheckinDate', () => {
+  const ctx = deriveCheckinContext(bogota('2026-10-05T09:15:00'));
+
+  it('accepts today', () => {
+    expect(isEligibleCheckinDate('2026-10-05', ctx)).toBe(true);
+  });
+
+  it('accepts yesterday', () => {
+    expect(isEligibleCheckinDate('2026-10-04', ctx)).toBe(true);
+  });
+
+  it('rejects the day before yesterday', () => {
+    expect(isEligibleCheckinDate('2026-10-03', ctx)).toBe(false);
+  });
+
+  it('rejects a future date', () => {
+    expect(isEligibleCheckinDate('2026-10-06', ctx)).toBe(false);
+  });
+
+  it('rejects a date outside the competition even if it would otherwise be "yesterday"', () => {
+    const edgeCtx = deriveCheckinContext(bogota('2026-10-01T09:00:00'));
+    expect(edgeCtx.yesterday).toBe('2026-09-30');
+    expect(isEligibleCheckinDate('2026-09-30', edgeCtx)).toBe(false);
   });
 });

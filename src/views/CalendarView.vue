@@ -32,13 +32,19 @@ const STATUS_LABELS = { clean: 'Limpio', relapse: 'Pecó', no_reportado: 'No rep
       </button>
     </div>
 
-    <CalendarGrid v-if="activeUser" :days="activeUser.days" :today="boardState.data.targetDate" @select="selectedRecord = $event" />
+    <CalendarGrid
+      v-if="activeUser"
+      :days="activeUser.days"
+      :today="boardState.data.today"
+      :yesterday="boardState.data.yesterday"
+      @select="selectedRecord = $event"
+    />
 
     <div class="calendar-legend">
       <span class="legend-item"><span class="legend-dot state-clean"></span>Limpio</span>
       <span class="legend-item"><span class="legend-dot state-relapse"></span>Pecó</span>
       <span class="legend-item"><span class="legend-dot state-no_reportado"></span>No reportado</span>
-      <span class="legend-item"><span class="legend-dot state-today"></span>Hoy</span>
+      <span class="legend-item"><span class="legend-dot state-today"></span>Pendiente</span>
     </div>
 
     <div v-if="selectedRecord" class="day-detail">

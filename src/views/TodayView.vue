@@ -4,8 +4,7 @@ import confetti from 'canvas-confetti';
 import { useAuth } from '../composables/useAuth.js';
 import { useBoard } from '../composables/useBoard.js';
 import FlameCounter from '../components/FlameCounter.vue';
-import RachaPeligroBanner from '../components/RachaPeligroBanner.vue';
-import { STATUS, TRIGGER_TAGS, TRIGGER_LABELS, MAX_NOTE_LENGTH } from '../../shared/constants.js';
+import { STATUS, TRIGGER_TAGS, TRIGGER_LABELS, MAX_NOTE_LENGTH, COMPETITION_START } from '../../shared/constants.js';
 
 const { state: authState } = useAuth();
 const { state: boardState, submitCheckin } = useBoard();
@@ -19,15 +18,27 @@ const successPhrase = ref(null);
 
 const me = computed(() => boardState.data?.users.find((u) => u.id === authState.userId));
 const todayRecord = computed(() => {
-  const target = boardState.data?.targetDate;
-  return me.value?.days.find((d) => d.date === target) ?? null;
+  const today = boardState.data?.today;
+  return me.value?.days.find((d) => d.date === today) ?? null;
 });
+
+const yesterday = computed(() => boardState.data?.yesterday ?? null);
+const yesterdayRecord = computed(() => me.value?.days.find((d) => d.date === yesterday.value) ?? null);
+const showYesterdayCard = computed(
+  () => yesterday.value && yesterday.value >= COMPETITION_START && !yesterdayRecord.value,
+);
+
+const yShowForm = ref(false);
+const yNote = ref('');
+const yTrigger = ref(null);
+const ySubmitting = ref(false);
+const yError = ref(null);
 
 async function markClean() {
   submitting.value = true;
   errorMsg.value = null;
   try {
-    const res = await submitCheckin(STATUS.CLEAN);
+    const res = await submitCheckin(STATUS.CLEAN, { date: boardState.data.today });
     successPhrase.value = res.phrase;
     confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
   } catch (err) {
@@ -41,7 +52,11 @@ async function markRelapse() {
   submitting.value = true;
   errorMsg.value = null;
   try {
-    const res = await submitCheckin(STATUS.RELAPSE, { note: note.value, trigger: trigger.value });
+    const res = await submitCheckin(STATUS.RELAPSE, {
+      date: boardState.data.today,
+      note: note.value,
+      trigger: trigger.value,
+    });
     successPhrase.value = res.phrase;
     showRelapseForm.value = false;
   } catch (err) {
@@ -50,22 +65,77 @@ async function markRelapse() {
     submitting.value = false;
   }
 }
+
+async function markYesterdayClean() {
+  ySubmitting.value = true;
+  yError.value = null;
+  try {
+    await submitCheckin(STATUS.CLEAN, { date: yesterday.value });
+  } catch (err) {
+    yError.value = err.message;
+  } finally {
+    ySubmitting.value = false;
+  }
+}
+
+async function markYesterdayRelapse() {
+  ySubmitting.value = true;
+  yError.value = null;
+  try {
+    await submitCheckin(STATUS.RELAPSE, { date: yesterday.value, note: yNote.value, trigger: yTrigger.value });
+    yShowForm.value = false;
+  } catch (err) {
+    yError.value = err.message;
+  } finally {
+    ySubmitting.value = false;
+  }
+}
 </script>
 
 <template>
   <div v-if="boardState.data" class="screen today-screen">
-    <RachaPeligroBanner v-if="!todayRecord" :minutes-until-close="boardState.data.minutesUntilClose" />
-
     <FlameCounter :streak="me?.currentStreak ?? 0" />
+
+    <div v-if="showYesterdayCard" class="yesterday-card">
+      <p class="yesterday-card-label">😴 ¿Se te pasó marcar ayer?</p>
+      <div v-if="!yShowForm" class="yesterday-actions">
+        <button type="button" class="btn-clean btn-compact" :disabled="ySubmitting" @click="markYesterdayClean">
+          ✅ Limpio
+        </button>
+        <button type="button" class="btn-relapse btn-compact" :disabled="ySubmitting" @click="yShowForm = true">
+          😔 Pequé
+        </button>
+      </div>
+      <div v-else class="relapse-form">
+        <textarea
+          v-model="yNote"
+          :maxlength="MAX_NOTE_LENGTH"
+          placeholder="Nota privada, opcional — solo la ves tú"
+        ></textarea>
+        <div class="trigger-chips">
+          <button
+            v-for="t in TRIGGER_TAGS"
+            :key="t"
+            type="button"
+            class="chip"
+            :class="{ active: yTrigger === t }"
+            @click="yTrigger = yTrigger === t ? null : t"
+          >
+            {{ TRIGGER_LABELS[t] }}
+          </button>
+        </div>
+        <button type="button" class="btn-confirm-relapse" :disabled="ySubmitting" @click="markYesterdayRelapse">
+          Confirmar
+        </button>
+        <button type="button" class="link-button" @click="yShowForm = false">Cancelar</button>
+      </div>
+      <p v-if="yError" class="error-msg">{{ yError }}</p>
+    </div>
 
     <div v-if="todayRecord" class="today-done">
       <p class="today-done-icon">{{ todayRecord.status === 'clean' ? '✅' : '😔' }}</p>
       <p>Ya marcaste tu día de hoy.</p>
       <p v-if="successPhrase" class="today-phrase">{{ successPhrase }}</p>
-    </div>
-
-    <div v-else-if="!boardState.data.isWithinWindow" class="today-closed">
-      <p>El check-in solo se abre de noche (18:00–04:00).</p>
     </div>
 
     <template v-else>
@@ -80,7 +150,7 @@ async function markRelapse() {
         <textarea
           v-model="note"
           :maxlength="MAX_NOTE_LENGTH"
-          placeholder="Nota opcional (la ven los otros 2)"
+          placeholder="Nota privada, opcional — solo la ves tú"
         ></textarea>
         <div class="trigger-chips">
           <button
