@@ -13,8 +13,8 @@ export default defineConfig({
         description: 'Competencia de 3 contra el Pecado — octubre 2026.',
         start_url: '/',
         display: 'standalone',
-        background_color: '#0b0f19',
-        theme_color: '#0b0f19',
+        background_color: '#F6ECE1',
+        theme_color: '#F6ECE1',
         icons: [
           { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
