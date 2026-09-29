@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { STATUS } from '../../shared/constants.js';
 
-// In-memory fake standing in for Vercel Blob, behind the same interface as blob.js —
-// lets recordCheckin's honesty rules (window, immutability, date derivation) be tested
-// without touching real storage.
+// In-memory fake standing in for the GitHub-backed store, behind the same interface as
+// store.js — lets recordCheckin's honesty rules (window, immutability, date derivation)
+// be tested without touching real storage.
 const store = new Map();
 
-vi.mock('./blob.js', () => ({
+vi.mock('./store.js', () => ({
   existsKey: async (key) => store.has(key),
   putJson: async (key, data) => {
     if (store.has(key)) throw new Error('already exists');

@@ -1,6 +1,6 @@
 import { STATUS, MAX_NOTE_LENGTH, TRIGGER_TAGS, USER_IDS } from '../../shared/constants.js';
 import { deriveCheckinContext, allCompetitionDates, getServerNow } from './time.js';
-import { existsKey, putJson, listJson } from './blob.js';
+import { existsKey, putJson, listJson } from './store.js';
 
 const checkinKey = (userId, date) => `checkins/${userId}/${date}.json`;
 
@@ -15,7 +15,7 @@ export class CheckinError extends Error {
 /**
  * The single place that writes a check-in, for both the web endpoint and the Telegram
  * webhook. Every honesty rule lives here: night-window only, server-derived date,
- * immutable once written (checked here, then backstopped by blob.js's allowOverwrite:false).
+ * immutable once written (checked here, then backstopped by store.js's allowOverwrite:false).
  */
 export async function recordCheckin({ userId, status, note, trigger, source, now = getServerNow() }) {
   if (!USER_IDS.includes(userId)) {

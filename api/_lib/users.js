@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { getJson, putJson } from './blob.js';
+import { getJson, putJson } from './store.js';
 import { USER_IDS } from '../../shared/constants.js';
 
 const userKey = (userId) => `users/${userId}.json`;

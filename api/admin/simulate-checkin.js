@@ -1,5 +1,5 @@
 import { requireAdmin } from '../_lib/auth.js';
-import { putJson } from '../_lib/blob.js';
+import { putJson } from '../_lib/store.js';
 import { withErrorHandling } from '../_lib/handler.js';
 import { STATUS, TRIGGER_TAGS, MAX_NOTE_LENGTH, USER_IDS } from '../../shared/constants.js';
 

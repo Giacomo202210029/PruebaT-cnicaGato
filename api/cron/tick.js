@@ -1,6 +1,6 @@
 import { sweepUnreported } from '../_lib/checkins.js';
 import { getAllUsers } from '../_lib/users.js';
-import { existsKey, putJson } from '../_lib/blob.js';
+import { existsKey, putJson } from '../_lib/store.js';
 import { sendMessage, buildCheckinKeyboard } from '../_lib/telegram.js';
 import { deriveCheckinContext, getServerNow } from '../_lib/time.js';
 import { WINDOW_START_HOUR, URGENT_REMINDER_HOUR, TIMEZONE } from '../../shared/constants.js';

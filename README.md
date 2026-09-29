@@ -6,7 +6,7 @@ Competencia privada de 3 personas contra su Pecado, del 1 al 31 de octubre de 20
 
 - Frontend: Vue 3 + Vite, PWA instalable (`vite-plugin-pwa`), sin router (una sola pantalla con tabs).
 - Backend: funciones serverless de Vercel bajo `/api`.
-- Datos: Vercel Blob — un JSON por `checkins/{usuario}/{fecha}.json` y `users/{usuario}.json`.
+- Datos: un repo de GitHub aparte usado como almacén — un JSON por `checkins/{usuario}/{fecha}.json` y `users/{usuario}.json`, vía la API de GitHub (sin base de datos con cuota medida).
 - Bot: webhook de Telegram (`/api/telegram/webhook`) que comparte toda la lógica de honestidad con el check-in web.
 - Cron: `/api/cron/tick`, cada hora — recordatorios + barrido de días no reportados.
 
@@ -21,7 +21,15 @@ npm run build
 
 ## Variables de entorno
 
-Ver `.env.example`. En Vercel, `BLOB_READ_WRITE_TOKEN` se crea sola al conectar un Blob store al proyecto; las demás (`AUTH_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET`) se generan a mano y se cargan como variables de entorno del proyecto.
+Ver `.env.example`. `AUTH_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` y `CRON_SECRET` se generan a mano y se cargan como variables de entorno del proyecto en Vercel.
+
+`GITHUB_DATA_TOKEN`, `DATA_REPO_OWNER` y `DATA_REPO_NAME` apuntan al repo que sirve de base de datos:
+
+1. En GitHub → Settings → Developer settings → **Fine-grained tokens** → *Generate new token*.
+2. Repository access: **Only select repositories** → elige el repo de datos.
+3. Permissions → Repository permissions → **Contents: Read and write**.
+4. Copia el token (`github_pat_...`) y cárgalo como `GITHUB_DATA_TOKEN` en Vercel.
+5. `DATA_REPO_OWNER` = tu usuario de GitHub, `DATA_REPO_NAME` = el nombre del repo de datos, `DATA_REPO_BRANCH` = `data-store` (ya viene con ese valor por defecto).
 
 ## Poner el bot de Telegram a andar
 

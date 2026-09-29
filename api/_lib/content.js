@@ -1,4 +1,4 @@
-import { getJson, putJson } from './blob.js';
+import { getJson, putJson } from './store.js';
 import { CLEAN_PHRASES, RELAPSE_PHRASES } from '../../shared/constants.js';
 
 const CONTENT_KEY = 'config/content.json';

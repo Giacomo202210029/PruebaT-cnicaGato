@@ -1,5 +1,5 @@
 import { requireAdmin } from '../_lib/auth.js';
-import { deleteAll } from '../_lib/blob.js';
+import { deleteAll } from '../_lib/store.js';
 import { withErrorHandling } from '../_lib/handler.js';
 
 /** Admin-only: wipes every check-in (test and real alike). Meant to be used once, right
