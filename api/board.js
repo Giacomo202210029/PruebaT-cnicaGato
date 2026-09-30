@@ -30,12 +30,16 @@ export default withErrorHandling(async function handler(req, res) {
     }),
   );
 
-  // Relapse notes/triggers are private — only their author ever sees them. Stats above are
-  // computed from the full, unstripped records first.
-  const usersForResponse = users.map((u) => ({
-    ...u,
-    days: u.id === userId ? u.days : u.days.map((d) => ({ ...d, note: null, trigger: null })),
-  }));
+  // Calendars are private: nobody sees another player's day-by-day record, only the public
+  // score (computed above from the full, unstripped records). The admin is the one exception
+  // — jugador1 can see everyone's day statuses to preview/test the app — but even the admin
+  // never sees another player's relapse notes/triggers; those are private with no exceptions.
+  const isAdmin = userId === ADMIN_USER_ID;
+  const usersForResponse = users.map((u) => {
+    if (u.id === userId) return u;
+    if (isAdmin) return { ...u, days: u.days.map((d) => ({ ...d, note: null, trigger: null })) };
+    return { ...u, days: [] };
+  });
 
   res.status(200).json({
     serverNow: ctx.serverNow,
@@ -46,7 +50,7 @@ export default withErrorHandling(async function handler(req, res) {
     users: usersForResponse,
     leaderboardOrder: rankUsers(users).map((u) => u.id),
     me: userId,
-    isAdmin: userId === ADMIN_USER_ID,
+    isAdmin,
     scienceFact: pickForDate(content.scienceFacts, ctx.calendarDate),
   });
 });

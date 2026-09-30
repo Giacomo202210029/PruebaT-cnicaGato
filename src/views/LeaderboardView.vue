@@ -15,11 +15,15 @@ const ranked = computed(() => {
 <template>
   <div v-if="boardState.data" class="screen leaderboard-screen">
     <h2>Tabla de posiciones</h2>
+    <p class="leaderboard-hint">
+      🏆 Ganas 1 punto por cada día que marcas limpio. Un día sin marcar o en el que caíste no resta, solo no suma.
+      El calendario de cada quien es privado — acá solo se ve el puntaje.
+    </p>
     <div v-for="u in ranked" :key="u.id" class="leaderboard-row" :class="{ first: u.rank === 1 }">
       <span class="rank">#{{ u.rank }}</span>
       <span class="name">{{ u.label }}</span>
+      <span class="stat stat-points">🏆 {{ u.totalClean }} pts</span>
       <span class="stat">🔥{{ u.currentStreak }}</span>
-      <span class="stat">✅{{ u.totalClean }}/31</span>
       <span class="stat">🏅{{ u.longestStreak }}</span>
     </div>
 

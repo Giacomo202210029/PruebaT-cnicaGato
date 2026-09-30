@@ -10,6 +10,7 @@ import ResultsView from './views/ResultsView.vue';
 import SettingsView from './views/SettingsView.vue';
 import AdminView from './views/AdminView.vue';
 import InstallPrompt from './components/InstallPrompt.vue';
+import RankChangeBanner from './components/RankChangeBanner.vue';
 
 const { state: authState } = useAuth();
 const { state: boardState, startPolling, stopPolling } = useBoard();
@@ -40,6 +41,7 @@ const tabs = computed(() => {
   <InstallPrompt />
   <LoginView v-if="!authState.token" />
   <template v-else>
+    <RankChangeBanner />
     <main class="app-main">
       <TodayView v-if="tab === 'today'" />
       <CalendarView v-else-if="tab === 'calendar'" />

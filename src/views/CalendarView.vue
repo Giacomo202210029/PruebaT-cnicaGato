@@ -1,40 +1,23 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useBoard } from '../composables/useBoard.js';
 import CalendarGrid from '../components/CalendarGrid.vue';
 import { TRIGGER_LABELS } from '../../shared/constants.js';
 
 const { state: boardState } = useBoard();
-const activeUserId = ref(null);
 const selectedRecord = ref(null);
 
-const users = computed(() => boardState.data?.users ?? []);
-const activeUser = computed(() => {
-  const id = activeUserId.value ?? boardState.data?.me;
-  return users.value.find((u) => u.id === id) ?? users.value[0];
-});
+const me = computed(() => boardState.data?.users.find((u) => u.id === boardState.data.me));
 
 const STATUS_LABELS = { clean: 'Limpio', relapse: 'Pecó', no_reportado: 'No reportado' };
 </script>
 
 <template>
-  <div v-if="boardState.data" class="screen calendar-screen">
-    <div class="user-tabs">
-      <button
-        v-for="u in users"
-        :key="u.id"
-        type="button"
-        class="user-tab"
-        :class="{ active: activeUser?.id === u.id }"
-        @click="activeUserId = u.id"
-      >
-        {{ u.label }}
-      </button>
-    </div>
+  <div v-if="boardState.data && me" class="screen calendar-screen">
+    <p class="calendar-hint">🔒 Tu calendario es privado — solo tú lo ves. Lo que ven los demás es tu puntaje, en la Tabla.</p>
 
     <CalendarGrid
-      v-if="activeUser"
-      :days="activeUser.days"
+      :days="me.days"
       :today="boardState.data.today"
       :yesterday="boardState.data.yesterday"
       @select="selectedRecord = $event"

@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAuth } from '../composables/useAuth.js';
 import { useBoard } from '../composables/useBoard.js';
+import CalendarGrid from '../components/CalendarGrid.vue';
 import {
   USER_IDS,
   USER_LABELS,
@@ -13,7 +14,11 @@ import {
 } from '../../shared/constants.js';
 
 const { authHeaders } = useAuth();
-const { refresh } = useBoard();
+const { state: boardState, refresh } = useBoard();
+
+// ---- Vista de calendarios (solo admin ve los 3 completos) ----
+const previewUserId = ref(USER_IDS[0]);
+const previewUser = computed(() => boardState.data?.users.find((u) => u.id === previewUserId.value));
 
 // ---- Modo prueba ----
 const simUser = ref(USER_IDS[0]);
@@ -118,6 +123,32 @@ async function saveContent() {
 <template>
   <div class="screen admin-screen">
     <h2>Admin</h2>
+
+    <section class="admin-section">
+      <h3>Vista de calendarios</h3>
+      <p class="admin-hint">
+        Como admin puedes ver el calendario día a día de los 3 (sin notas ni disparadores de los otros, eso sigue
+        siendo privado siempre). Jugador 2 y 3 nunca se ven entre sí — esto es solo para que pruebes la app.
+      </p>
+      <div class="user-tabs">
+        <button
+          v-for="id in USER_IDS"
+          :key="id"
+          type="button"
+          class="user-tab"
+          :class="{ active: previewUserId === id }"
+          @click="previewUserId = id"
+        >
+          {{ USER_LABELS[id] }}
+        </button>
+      </div>
+      <CalendarGrid
+        v-if="previewUser && boardState.data"
+        :days="previewUser.days"
+        :today="boardState.data.today"
+        :yesterday="boardState.data.yesterday"
+      />
+    </section>
 
     <section class="admin-section">
       <h3>Modo prueba</h3>

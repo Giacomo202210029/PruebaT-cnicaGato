@@ -401,7 +401,52 @@ h4 {
   color: var(--today-ink);
 }
 
+/* ---------- Rank change banner ---------- */
+.rank-banner {
+  margin: 10px 16px 0;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  font-family: inherit;
+}
+
+.rank-banner-up {
+  background: var(--clean-bg);
+  color: var(--clean-ink);
+  border: 1px solid var(--clean);
+}
+
+.rank-banner-down {
+  background: var(--relapse-bg);
+  color: var(--relapse-ink);
+  border: 1px solid var(--relapse);
+}
+
 /* ---------- Calendar ---------- */
+.calendar-hint {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.leaderboard-hint {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.stat-points {
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+
 .user-tabs {
   display: flex;
   gap: 6px;
